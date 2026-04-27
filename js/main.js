@@ -4,7 +4,6 @@ let vegetableMeshes = {};  // plotId -> THREE.Group
 let gameState;
 let selectedPlotId = null;
 let lastTime = 0;
-let mouseDownPos = { x: 0, y: 0 };
 let touchStart = null;
 
 const isMobile = () => window.innerWidth < 641 || /Mobi|Android/i.test(navigator.userAgent);
@@ -72,8 +71,7 @@ function init() {
   rebuildGarden();
 
   // Mouse events (desktop)
-  renderer.domElement.addEventListener('mousedown', e => { mouseDownPos = { x: e.clientX, y: e.clientY }; });
-  renderer.domElement.addEventListener('mouseup', onCanvasClick);
+  renderer.domElement.addEventListener('click', e => handleTap(e));
   renderer.domElement.addEventListener('mousemove', onCanvasHover);
 
   // Touch events (mobile) — detect taps separately from OrbitControls drags
@@ -175,7 +173,6 @@ function rebuildGarden() {
   Object.values(vegetableMeshes).forEach(m => scene.remove(m));
   vegetableMeshes = {};
 
-  const soilMat   = new THREE.MeshLambertMaterial({ color: 0x7B5428 });
   const borderMat = new THREE.MeshLambertMaterial({ color: 0x4E342E });
 
   gameState.plots.forEach(plot => {
@@ -187,7 +184,9 @@ function rebuildGarden() {
     scene.add(border);
     plotMeshes.push({ mesh: border, plotId: null });
 
-    const soil = new THREE.Mesh(new THREE.BoxGeometry(PLOT_SIZE, PLOT_H, PLOT_SIZE), soilMat);
+    // Each plot gets its own material so hover color changes don't bleed to others
+    const soil = new THREE.Mesh(new THREE.BoxGeometry(PLOT_SIZE, PLOT_H, PLOT_SIZE),
+      new THREE.MeshLambertMaterial({ color: 0x7B5428 }));
     soil.position.set(x, PLOT_H / 2, z);
     soil.receiveShadow = true;
     soil.castShadow = false;
@@ -248,13 +247,6 @@ function onCanvasHover(event) {
   } else {
     renderer.domElement.style.cursor = 'default';
   }
-}
-
-function onCanvasClick(event) {
-  const dx = Math.abs(event.clientX - mouseDownPos.x);
-  const dy = Math.abs(event.clientY - mouseDownPos.y);
-  if (dx > 5 || dy > 5) return;
-  handleTap(event);
 }
 
 function handleTap(event) {
