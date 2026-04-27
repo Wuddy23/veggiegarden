@@ -5,6 +5,9 @@ let gameState;
 let selectedPlotId = null;
 let lastTime = 0;
 let mouseDownPos = { x: 0, y: 0 };
+let touchStart = null;
+
+const isMobile = () => window.innerWidth < 641 || /Mobi|Android/i.test(navigator.userAgent);
 
 const PLOT_SIZE = 2.0;
 const PLOT_GAP  = 0.3;
@@ -18,11 +21,12 @@ function init() {
   scene.fog = new THREE.Fog(0x87CEEB, 25, 55);
 
   camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
-  camera.position.set(9, 13, 11);
+  setCameraForViewport();
   camera.lookAt(0, 0, 0);
 
-  renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const mobile = isMobile();
+  renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: !mobile });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, mobile ? 1.5 : 2));
   renderer.setSize(innerWidth, innerHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -41,8 +45,8 @@ function init() {
   const sun = new THREE.DirectionalLight(0xFFE4B5, 1.3);
   sun.position.set(12, 20, 10);
   sun.castShadow = true;
-  sun.shadow.mapSize.width = 2048;
-  sun.shadow.mapSize.height = 2048;
+  sun.shadow.mapSize.width  = mobile ? 1024 : 2048;
+  sun.shadow.mapSize.height = mobile ? 1024 : 2048;
   sun.shadow.camera.near = 1;
   sun.shadow.camera.far = 60;
   sun.shadow.camera.left = -20;
@@ -67,13 +71,52 @@ function init() {
   gameState = new GameState();
   rebuildGarden();
 
+  // Mouse events (desktop)
   renderer.domElement.addEventListener('mousedown', e => { mouseDownPos = { x: e.clientX, y: e.clientY }; });
   renderer.domElement.addEventListener('mouseup', onCanvasClick);
   renderer.domElement.addEventListener('mousemove', onCanvasHover);
+
+  // Touch events (mobile) — detect taps separately from OrbitControls drags
+  renderer.domElement.addEventListener('touchstart', e => {
+    if (e.touches.length === 1)
+      touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() };
+    else
+      touchStart = null;
+  }, { passive: true });
+
+  renderer.domElement.addEventListener('touchend', e => {
+    if (!touchStart || e.changedTouches.length !== 1) return;
+    const t = e.changedTouches[0];
+    const dx = Math.abs(t.clientX - touchStart.x);
+    const dy = Math.abs(t.clientY - touchStart.y);
+    const dt = Date.now() - touchStart.t;
+    touchStart = null;
+    if (dx < 14 && dy < 14 && dt < 350) {
+      handleTap({ clientX: t.clientX, clientY: t.clientY });
+    }
+  }, { passive: true });
+
   window.addEventListener('resize', onResize);
+
+  // Shop FAB (mobile)
+  const shopToggle = document.getElementById('shop-toggle');
+  const shopPanel  = document.getElementById('shop-panel');
+  const backdrop   = document.getElementById('backdrop');
+
+  shopToggle.addEventListener('click', () => {
+    const open = shopPanel.classList.toggle('open');
+    backdrop.classList.toggle('visible', open);
+  });
+  backdrop.addEventListener('click', () => {
+    shopPanel.classList.remove('open');
+    backdrop.classList.remove('visible');
+    document.getElementById('plant-menu').classList.add('hidden');
+    selectedPlotId = null;
+  });
 
   document.getElementById('close-plant-menu').addEventListener('click', closePlantMenu);
   buildUpgradesUI();
+  onResize(); // set correct FOV for current orientation
   requestAnimationFrame(animate);
 }
 
@@ -97,8 +140,8 @@ function addDecorations() {
     scene.add(post);
   });
 
-  // Trees
-  const treePositions = [[-8, -8], [8, -8], [-8, 8], [8, 8], [0, -10], [-10, 0]];
+  // Trees — kept far enough from the camera not to obstruct mobile view
+  const treePositions = [[-13, -13], [13, -13], [-13, 13], [13, 13], [0, -14], [-14, 0]];
   treePositions.forEach(([x, z]) => {
     const trunk = new THREE.Mesh(
       new THREE.CylinderGeometry(0.18, 0.25, 1.4, 7),
@@ -210,8 +253,11 @@ function onCanvasHover(event) {
 function onCanvasClick(event) {
   const dx = Math.abs(event.clientX - mouseDownPos.x);
   const dy = Math.abs(event.clientY - mouseDownPos.y);
-  if (dx > 5 || dy > 5) return; // drag, not click
+  if (dx > 5 || dy > 5) return;
+  handleTap(event);
+}
 
+function handleTap(event) {
   const plotId = getPlotUnderMouse(event);
   if (plotId !== null) {
     handlePlotClick(plotId);
@@ -269,11 +315,18 @@ function openPlantMenu() {
     opts.appendChild(btn);
   });
   document.getElementById('plant-menu').classList.remove('hidden');
+  if (isMobile()) document.getElementById('backdrop').classList.add('visible');
 }
 
 function closePlantMenu() {
   document.getElementById('plant-menu').classList.add('hidden');
+  document.getElementById('backdrop').classList.remove('visible');
   selectedPlotId = null;
+}
+
+function openShopDrawer() {
+  document.getElementById('shop-panel').classList.add('open');
+  document.getElementById('backdrop').classList.add('visible');
 }
 
 // ── Upgrades UI ───────────────────────────────────────────────────────────────
@@ -382,8 +435,24 @@ function animate(time) {
   renderer.render(scene, camera);
 }
 
+function setCameraForViewport() {
+  if (innerWidth < innerHeight) {
+    // Portrait: steep overhead angle so the garden fills the center of screen
+    camera.position.set(0, 14, 4);
+    camera.fov = 60;
+    if (controls) { controls.minDistance = 6; controls.maxDistance = 22; }
+  } else {
+    camera.position.set(9, 13, 11);
+    camera.fov = 45;
+    if (controls) { controls.minDistance = 6; controls.maxDistance = 35; }
+  }
+  camera.lookAt(0, 0, 0);
+  if (controls) { controls.target.set(0, 0, 0); controls.update(); }
+}
+
 function onResize() {
   camera.aspect = innerWidth / innerHeight;
+  setCameraForViewport();
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 }
