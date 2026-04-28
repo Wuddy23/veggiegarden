@@ -55,43 +55,49 @@ function createVegetableMesh(type) {
     }
 
     case 'lettuce': {
-      const lOuter = makeMat(0x7CB342); // rich outer green
-      const lMid   = makeMat(0x9CCC65); // lighter mid
-      const lInner = makeMat(0xAED581); // pale inner
-      const lHeart = makeMat(0xC5E1A5); // soft yellow-green heart (subtle)
-      // Outer ring — 8 broad flat leaves splaying wide
+      const lOuter = makeMat(0x7CB342);
+      const lMid   = makeMat(0x8DB83A);
+      const lInner = makeMat(0xAED581);
+      const lHeart = makeMat(0xC5E1A5);
+      // Outer ring — 8 wide leaves lying nearly flat like the photo,
+      // bases at centre, spreading broadly outward across the soil
       for (let i = 0; i < 8; i++) {
         const a = (i / 8) * Math.PI * 2;
-        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.24, 7, 5), lOuter);
-        leaf.position.set(Math.cos(a) * 0.19, 0.02, Math.sin(a) * 0.19);
-        leaf.scale.set(0.92, 0.14, 0.6);
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.22, 7, 5), lOuter);
+        leaf.position.set(Math.cos(a) * 0.06, 0.02, Math.sin(a) * 0.06);
+        leaf.scale.set(0.68, 0.88, 0.11); // wide, long, very thin
+        leaf.rotation.order = 'YXZ';
         leaf.rotation.y = a;
-        leaf.rotation.z = Math.cos(a) * 0.1;
+        leaf.rotation.x = 1.05; // ~60° from upright → mostly flat
         leaf.castShadow = true;
         group.add(leaf);
       }
-      // Mid ring — 6 leaves cupped slightly upward
+      // Mid ring — 6 leaves beginning to cup upward
       for (let i = 0; i < 6; i++) {
         const a = (i / 6) * Math.PI * 2 + 0.26;
         const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.17, 7, 5), lMid);
-        leaf.position.set(Math.cos(a) * 0.11, 0.09, Math.sin(a) * 0.11);
-        leaf.scale.set(0.82, 0.22, 0.58);
+        leaf.position.set(Math.cos(a) * 0.04, 0.06, Math.sin(a) * 0.04);
+        leaf.scale.set(0.54, 0.78, 0.12);
+        leaf.rotation.order = 'YXZ';
         leaf.rotation.y = a;
+        leaf.rotation.x = 0.55; // moderately cupped
         group.add(leaf);
       }
-      // Inner ring — 4 upright cupped leaves
-      for (let i = 0; i < 4; i++) {
-        const a = (i / 4) * Math.PI * 2 + 0.52;
-        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.11, 6, 5), lInner);
-        leaf.position.set(Math.cos(a) * 0.05, 0.17, Math.sin(a) * 0.05);
-        leaf.scale.set(0.68, 0.48, 0.52);
+      // Inner ring — 5 leaves standing upright, forming the tight head
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2 + 0.52;
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 5), lInner);
+        leaf.position.set(Math.cos(a) * 0.025, 0.1, Math.sin(a) * 0.025);
+        leaf.scale.set(0.38, 0.65, 0.13);
+        leaf.rotation.order = 'YXZ';
         leaf.rotation.y = a;
+        leaf.rotation.x = 0.15; // nearly upright
         group.add(leaf);
       }
-      // Small tight heart at centre
+      // Tight pale heart at centre
       const heart = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 5), lHeart);
       heart.position.y = 0.24;
-      heart.scale.set(0.85, 0.75, 0.85);
+      heart.scale.set(0.78, 0.95, 0.78);
       group.add(heart);
       break;
     }
