@@ -110,7 +110,7 @@ body {
   background: rgba(10, 40, 10, 0.82);
   border: 1px solid rgba(120, 220, 120, 0.35);
   color: rgba(255, 255, 255, 0.75);
-  font-size: 22px;
+  font-size: 30px;
   line-height: 1;
   cursor: pointer;
   z-index: 20;
@@ -347,7 +347,7 @@ body {
   #toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
 
   /* Recenter: larger touch target on mobile */
-  #recenter-btn { width: 52px; height: 52px; font-size: 24px; }
+  #recenter-btn { width: 52px; height: 52px; font-size: 32px; }
 }
 
 .hidden { display: none !important; }
