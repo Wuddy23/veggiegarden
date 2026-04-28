@@ -357,7 +357,6 @@ function addVegetableMesh(plot) {
       const plant = createVegetableMesh(plot.vegetable);
       plant.scale.setScalar(0.40);
       plant.position.set(offX + c * spX, 0, offZ + r * spZ);
-      plant.rotation.y = (r * COLS + c) * 0.85; // vary orientation per plant
       group.add(plant);
     }
   }
