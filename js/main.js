@@ -1,6 +1,8 @@
 let scene, camera, renderer, controls, raycaster;
 let plotMeshes = [];       // { mesh, plotId }
 let vegetableMeshes = {};  // plotId -> THREE.Group
+let signMeshes = {};        // plotId -> THREE.Group
+let signTextureCache = {};  // vegetable key -> THREE.CanvasTexture
 let gameState;
 let selectedPlotId = null;
 let lastTime = 0;
@@ -344,7 +346,7 @@ function rebuildGarden() {
     scene.add(soil);
     plotMeshes.push({ mesh: soil, plotId: plot.id });
 
-    if (plot.vegetable) addVegetableMesh(plot);
+    if (plot.vegetable) { addVegetableMesh(plot); addSignMesh(plot); }
   });
 }
 
@@ -389,6 +391,86 @@ function removeVegetableMesh(plotId) {
   if (vegetableMeshes[plotId]) {
     scene.remove(vegetableMeshes[plotId]);
     delete vegetableMeshes[plotId];
+  }
+}
+
+// ── Plot signs ────────────────────────────────────────────────────────────────
+
+function getSignTexture(vegetable) {
+  if (signTextureCache[vegetable]) return signTextureCache[vegetable];
+  const veg = VEGETABLES[vegetable];
+  const W = 256, H = 220;
+  const canvas = document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  // Rounded cream background
+  ctx.fillStyle = '#F7F3E6';
+  ctx.beginPath();
+  const r = 22;
+  ctx.moveTo(r, 0); ctx.arcTo(W, 0, W, H, r); ctx.arcTo(W, H, 0, H, r);
+  ctx.arcTo(0, H, 0, 0, r); ctx.arcTo(0, 0, W, 0, r); ctx.closePath();
+  ctx.fill();
+
+  // Subtle border
+  ctx.strokeStyle = '#D8CFA8';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+
+  // Emoji
+  ctx.font = '110px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(veg.emoji, W / 2, 136);
+
+  // Name
+  ctx.font = 'bold 28px "Segoe UI", Arial, sans-serif';
+  ctx.fillStyle = '#4A3A1A';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText(veg.name.toUpperCase(), W / 2, 200);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  signTextureCache[vegetable] = tex;
+  return tex;
+}
+
+function addSignMesh(plot) {
+  if (signMeshes[plot.id]) return; // already exists
+  const { x, z } = plotWorldPos(plot.row, plot.col);
+  const group = new THREE.Group();
+
+  // Wooden stake
+  const stake = new THREE.Mesh(
+    new THREE.BoxGeometry(0.07, 0.62, 0.07),
+    new THREE.MeshLambertMaterial({ color: 0xB8894A })
+  );
+  stake.position.y = 0.31;
+  stake.castShadow = true;
+  group.add(stake);
+
+  // Sign board — front face (+Z) gets the canvas texture
+  const tex = getSignTexture(plot.vegetable);
+  const frontMat = new THREE.MeshLambertMaterial({ map: tex });
+  const sideMat  = new THREE.MeshLambertMaterial({ color: 0xEDE4C8 });
+  const board = new THREE.Mesh(
+    new THREE.BoxGeometry(0.52, 0.44, 0.055),
+    [sideMat, sideMat, sideMat, sideMat, frontMat, sideMat]
+  );
+  board.position.y = 0.82;
+  board.castShadow = true;
+  group.add(board);
+
+  // Place at the front-right corner of the plot, facing the camera
+  group.position.set(x + PLOT_SIZE * 0.46, 0, z + PLOT_SIZE * 0.46);
+  group.rotation.y = -Math.PI / 4; // face toward +X+Z (default camera direction)
+  scene.add(group);
+  signMeshes[plot.id] = group;
+}
+
+function removeSignMesh(plotId) {
+  if (signMeshes[plotId]) {
+    scene.remove(signMeshes[plotId]);
+    delete signMeshes[plotId];
   }
 }
 
@@ -445,6 +527,7 @@ function handlePlotClick(plotId) {
     const result = gameState.harvest(plotId);
     if (result) {
       removeVegetableMesh(plotId);
+      removeSignMesh(plotId);
       showToast(`+${result.earned} pts  ${result.emoji} ${result.vegName} harvested!`);
       updateUI();
     }
@@ -473,7 +556,9 @@ function openPlantMenu() {
     if (canAfford) {
       btn.addEventListener('click', () => {
         if (gameState.plant(selectedPlotId, key)) {
-          addVegetableMesh(gameState.plots[selectedPlotId]);
+          const p = gameState.plots[selectedPlotId];
+          addVegetableMesh(p);
+          addSignMesh(p);
           closePlantMenu();
           updateUI();
           showToast(`🌱 Planted ${veg.name}!`);
@@ -575,10 +660,12 @@ function animate(time) {
 
       if (plot.state === 'empty' && hasMesh) {
         removeVegetableMesh(plot.id);
+        removeSignMesh(plot.id);
         return;
       }
       if ((plot.state === 'growing' || plot.state === 'ready') && !hasMesh) {
         addVegetableMesh(plot);
+        addSignMesh(plot);
       }
 
       const mesh = vegetableMeshes[plot.id];
