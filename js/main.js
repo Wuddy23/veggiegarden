@@ -357,7 +357,9 @@ function addVegetableMesh(plot) {
       const plant = (plot.vegetable === 'tomato' && plot.state === 'growing')
         ? createTomatoPlantMesh()
         : createVegetableMesh(plot.vegetable);
-      plant.scale.setScalar(0.40);
+      // Each plant starts at its grid position and grows in-place
+      const s = 0.40 * Math.max(0.02, plot.growthProgress);
+      plant.scale.setScalar(s);
       plant.position.set(offX + c * spX, 0, offZ + r * spZ);
       group.add(plant);
     }
@@ -365,7 +367,7 @@ function addVegetableMesh(plot) {
 
   group.userData.tomatoStage = (plot.vegetable === 'tomato') ? plot.state : null;
   group.position.set(x, PLOT_H, z);
-  group.scale.setScalar(Math.max(0.05, plot.growthProgress));
+  // Group stays at scale 1 — individual plants scale up instead
   scene.add(group);
   vegetableMeshes[plot.id] = group;
 }
@@ -570,8 +572,8 @@ function animate(time) {
       if (!mesh) return;
 
       if (plot.state === 'growing') {
-        const s = Math.max(0.05, plot.growthProgress);
-        mesh.scale.setScalar(s);
+        const s = 0.40 * Math.max(0.02, plot.growthProgress);
+        mesh.children.forEach(plant => plant.scale.setScalar(s));
         setVegetableReady(mesh, false);
       } else if (plot.state === 'ready') {
         // Swap tomato plant → tomato fruit the moment it becomes ready
@@ -580,8 +582,8 @@ function animate(time) {
           addVegetableMesh(plot);
           return;
         }
-        const bounce = 1 + Math.sin(time * 0.0025) * 0.06;
-        mesh.scale.setScalar(bounce);
+        const bounce = 0.40 * (1 + Math.sin(time * 0.0025) * 0.06);
+        mesh.children.forEach(plant => plant.scale.setScalar(bounce));
         setVegetableReady(mesh, true);
       }
     });
