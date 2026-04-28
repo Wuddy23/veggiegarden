@@ -441,10 +441,10 @@ function addSignMesh(plot) {
 
   // Wooden stake
   const stake = new THREE.Mesh(
-    new THREE.BoxGeometry(0.07, 0.62, 0.07),
+    new THREE.BoxGeometry(0.045, 0.38, 0.045),
     new THREE.MeshLambertMaterial({ color: 0xB8894A })
   );
-  stake.position.y = 0.31;
+  stake.position.y = 0.19;
   stake.castShadow = true;
   group.add(stake);
 
@@ -453,10 +453,10 @@ function addSignMesh(plot) {
   const frontMat = new THREE.MeshLambertMaterial({ map: tex });
   const sideMat  = new THREE.MeshLambertMaterial({ color: 0xEDE4C8 });
   const board = new THREE.Mesh(
-    new THREE.BoxGeometry(0.52, 0.44, 0.055),
+    new THREE.BoxGeometry(0.30, 0.26, 0.04),
     [sideMat, sideMat, sideMat, sideMat, frontMat, sideMat]
   );
-  board.position.y = 0.82;
+  board.position.y = 0.50;
   board.castShadow = true;
   group.add(board);
 
