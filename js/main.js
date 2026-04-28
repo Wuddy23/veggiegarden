@@ -354,13 +354,16 @@ function addVegetableMesh(plot) {
 
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
-      const plant = createVegetableMesh(plot.vegetable);
+      const plant = (plot.vegetable === 'tomato' && plot.state === 'growing')
+        ? createTomatoPlantMesh()
+        : createVegetableMesh(plot.vegetable);
       plant.scale.setScalar(0.40);
       plant.position.set(offX + c * spX, 0, offZ + r * spZ);
       group.add(plant);
     }
   }
 
+  group.userData.tomatoStage = (plot.vegetable === 'tomato') ? plot.state : null;
   group.position.set(x, PLOT_H, z);
   group.scale.setScalar(Math.max(0.05, plot.growthProgress));
   scene.add(group);
@@ -571,6 +574,12 @@ function animate(time) {
         mesh.scale.setScalar(s);
         setVegetableReady(mesh, false);
       } else if (plot.state === 'ready') {
+        // Swap tomato plant → tomato fruit the moment it becomes ready
+        if (plot.vegetable === 'tomato' && mesh.userData.tomatoStage === 'growing') {
+          removeVegetableMesh(plot.id);
+          addVegetableMesh(plot);
+          return;
+        }
         const bounce = 1 + Math.sin(time * 0.0025) * 0.06;
         mesh.scale.setScalar(bounce);
         setVegetableReady(mesh, true);

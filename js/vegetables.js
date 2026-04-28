@@ -104,6 +104,42 @@ function createVegetableMesh(type) {
   return group;
 }
 
+function createTomatoPlantMesh() {
+  const g = new THREE.Group();
+  const stemMat = makeMat(0x33691E);
+  const leafA   = makeMat(0x558B2F);
+  const leafB   = makeMat(0x7CB342);
+
+  // Main stem
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.055, 0.65, 5), stemMat);
+  stem.position.y = 0.325;
+  stem.castShadow = true;
+  g.add(stem);
+
+  // Leaf pairs at three heights along the stem
+  [0.18, 0.37, 0.55].forEach((y, i) => {
+    [-1, 1].forEach(side => {
+      const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.14, 6, 4), i % 2 === 0 ? leafA : leafB);
+      leaf.position.set(side * 0.18, y, 0);
+      leaf.scale.set(1.0, 0.22, 0.6);
+      leaf.rotation.z = side * 0.28;
+      leaf.castShadow = true;
+      g.add(leaf);
+    });
+  });
+
+  // Bushy top
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2;
+    const top = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 4), leafB);
+    top.position.set(Math.cos(a) * 0.09, 0.68, Math.sin(a) * 0.09);
+    top.scale.set(0.9, 0.32, 0.7);
+    g.add(top);
+  }
+
+  return g;
+}
+
 function setVegetableReady(group, isReady) {
   group.traverse(child => {
     if (child.isMesh && child.material) {
