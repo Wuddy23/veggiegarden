@@ -343,12 +343,29 @@ function rebuildGarden() {
 }
 
 function addVegetableMesh(plot) {
-  const mesh = createVegetableMesh(plot.vegetable);
+  const group = new THREE.Group();
   const { x, z } = plotWorldPos(plot.row, plot.col);
-  mesh.position.set(x, PLOT_H, z);
-  mesh.scale.setScalar(Math.max(0.05, plot.growthProgress));
-  scene.add(mesh);
-  vegetableMeshes[plot.id] = mesh;
+
+  // 2 rows × 3 columns of plants per plot
+  const COLS = 3, ROWS = 2;
+  const spX = 0.62, spZ = 0.52; // spacing between plants
+  const offX = -spX * (COLS - 1) / 2;
+  const offZ = -spZ * (ROWS - 1) / 2;
+
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const plant = createVegetableMesh(plot.vegetable);
+      plant.scale.setScalar(0.40);
+      plant.position.set(offX + c * spX, 0, offZ + r * spZ);
+      plant.rotation.y = (r * COLS + c) * 0.85; // vary orientation per plant
+      group.add(plant);
+    }
+  }
+
+  group.position.set(x, PLOT_H, z);
+  group.scale.setScalar(Math.max(0.05, plot.growthProgress));
+  scene.add(group);
+  vegetableMeshes[plot.id] = group;
 }
 
 function removeVegetableMesh(plotId) {
