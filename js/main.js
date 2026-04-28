@@ -3,6 +3,7 @@ let plotMeshes = [];       // { mesh, plotId }
 let vegetableMeshes = {};  // plotId -> THREE.Group
 let signMeshes = {};        // plotId -> THREE.Group
 let signTextureCache = {};  // vegetable key -> THREE.CanvasTexture
+let fencePosts = [];        // THREE.Mesh[]
 let gameState;
 let selectedPlotId = null;
 let lastTime = 0;
@@ -268,25 +269,31 @@ function createBarn() {
 
 // ── Decorations ──────────────────────────────────────────────────────────────
 
+function buildFence(gridSize) {
+  // Remove existing posts
+  fencePosts.forEach(p => scene.remove(p));
+  fencePosts = [];
+
+  const total    = gridSize * (PLOT_SIZE + PLOT_GAP) - PLOT_GAP;
+  const halfFence = total / 2 + 1.2; // 1.2 units of clearance outside the plots
+  const iMax     = Math.floor(halfFence);
+  const postMat  = new THREE.MeshLambertMaterial({ color: 0x8B6914 });
+
+  for (let i = -iMax; i <= iMax; i++) {
+    [[i, halfFence], [i, -halfFence], [halfFence, i], [-halfFence, i]].forEach(([x, z]) => {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.6, 0.12), postMat);
+      post.position.set(x, 0.3, z);
+      post.castShadow = true;
+      scene.add(post);
+      fencePosts.push(post);
+    });
+  }
+}
+
 function addDecorations() {
   createBarn();
 
-  // Fence posts around a 3x3 base area
-  const fencePositions = [];
-  const halfFence = 4.5;
-  for (let i = -4; i <= 4; i++) {
-    fencePositions.push([i * 1.0, halfFence]);
-    fencePositions.push([i * 1.0, -halfFence]);
-    fencePositions.push([halfFence, i * 1.0]);
-    fencePositions.push([-halfFence, i * 1.0]);
-  }
-  const postMat = new THREE.MeshLambertMaterial({ color: 0x8B6914 });
-  fencePositions.forEach(([x, z]) => {
-    const post = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.6, 0.12), postMat);
-    post.position.set(x, 0.3, z);
-    post.castShadow = true;
-    scene.add(post);
-  });
+  buildFence(3); // initial 3×3 grid (gameState not yet constructed here)
 
   // Trees — kept far enough from the camera not to obstruct mobile view
   const treePositions = [[-13, -13], [13, -13], [-13, 13], [13, 13], [0, -14], [-14, 0]];
@@ -601,7 +608,7 @@ function buildUpgradesUI() {
     if (!owned) {
       div.addEventListener('click', () => {
         if (gameState.buyUpgrade(upg.id)) {
-          if (upg.id === 'expand_garden') { rebuildGarden(); adjustCamera(); }
+          if (upg.id === 'expand_garden') { rebuildGarden(); buildFence(gameState.gridSize); adjustCamera(); }
           buildUpgradesUI();
           updateUI();
           showToast(`${upg.emoji} ${upg.name} purchased!`);
