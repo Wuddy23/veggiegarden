@@ -113,6 +113,12 @@ function init() {
   });
 
   document.getElementById('close-plant-menu').addEventListener('click', closePlantMenu);
+
+  document.getElementById('recenter-btn').addEventListener('click', () => {
+    setCameraForViewport();
+    camera.updateProjectionMatrix();
+  });
+
   buildUpgradesUI();
   onResize(); // set correct FOV for current orientation
   requestAnimationFrame(animate);

@@ -99,6 +99,32 @@ body {
 }
 #backdrop.visible { display: block; }
 
+/* ── Recenter FAB ────────────────────────────────── */
+#recenter-btn {
+  position: fixed;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  left: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(10, 40, 10, 0.82);
+  border: 1px solid rgba(120, 220, 120, 0.35);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 3px 16px rgba(0,0,0,0.35);
+  transition: transform 0.15s, color 0.15s;
+}
+#recenter-btn:hover { color: #fff; }
+#recenter-btn:active { transform: scale(0.90); }
+
 /* ── Shop FAB (mobile only) ──────────────────────── */
 #shop-toggle {
   display: none;
@@ -319,6 +345,9 @@ body {
 
   /* Toast above FAB */
   #toast { bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Recenter: larger touch target on mobile */
+  #recenter-btn { width: 52px; height: 52px; font-size: 24px; }
 }
 
 .hidden { display: none !important; }
