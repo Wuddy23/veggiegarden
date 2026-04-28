@@ -574,7 +574,6 @@ function animate(time) {
       } else if (plot.state === 'ready') {
         const bounce = 1 + Math.sin(time * 0.0025) * 0.06;
         mesh.scale.setScalar(bounce);
-        mesh.rotation.y = (time * 0.001) % (Math.PI * 2);
         setVegetableReady(mesh, true);
       }
     });
