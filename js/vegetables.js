@@ -58,47 +58,40 @@ function createVegetableMesh(type) {
       const lOuter = makeMat(0x7CB342);
       const lMid   = makeMat(0x8DB83A);
       const lInner = makeMat(0xAED581);
-      const lHeart = makeMat(0xC5E1A5);
-      // Outer ring — 8 wide leaves lying nearly flat like the photo,
-      // bases at centre, spreading broadly outward across the soil
+      // Outer ring — 8 wide leaves lying nearly flat
       for (let i = 0; i < 8; i++) {
         const a = (i / 8) * Math.PI * 2;
-        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.22, 7, 5), lOuter);
-        leaf.position.set(Math.cos(a) * 0.06, 0.02, Math.sin(a) * 0.06);
-        leaf.scale.set(0.68, 0.88, 0.11); // wide, long, very thin
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.30, 7, 5), lOuter);
+        leaf.position.set(Math.cos(a) * 0.08, 0.02, Math.sin(a) * 0.08);
+        leaf.scale.set(0.72, 0.95, 0.11);
         leaf.rotation.order = 'YXZ';
         leaf.rotation.y = a;
-        leaf.rotation.x = 1.05; // ~60° from upright → mostly flat
+        leaf.rotation.x = 1.05;
         leaf.castShadow = true;
         group.add(leaf);
       }
-      // Mid ring — 6 leaves beginning to cup upward
+      // Mid ring — 6 leaves cupping upward
       for (let i = 0; i < 6; i++) {
         const a = (i / 6) * Math.PI * 2 + 0.26;
-        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.17, 7, 5), lMid);
-        leaf.position.set(Math.cos(a) * 0.04, 0.06, Math.sin(a) * 0.04);
-        leaf.scale.set(0.54, 0.78, 0.12);
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.24, 7, 5), lMid);
+        leaf.position.set(Math.cos(a) * 0.05, 0.07, Math.sin(a) * 0.05);
+        leaf.scale.set(0.60, 0.85, 0.12);
         leaf.rotation.order = 'YXZ';
         leaf.rotation.y = a;
-        leaf.rotation.x = 0.55; // moderately cupped
+        leaf.rotation.x = 0.55;
         group.add(leaf);
       }
-      // Inner ring — 5 leaves standing upright, forming the tight head
+      // Inner ring — 5 upright leaves forming the head
       for (let i = 0; i < 5; i++) {
         const a = (i / 5) * Math.PI * 2 + 0.52;
-        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 5), lInner);
-        leaf.position.set(Math.cos(a) * 0.025, 0.1, Math.sin(a) * 0.025);
-        leaf.scale.set(0.38, 0.65, 0.13);
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.17, 6, 5), lInner);
+        leaf.position.set(Math.cos(a) * 0.03, 0.12, Math.sin(a) * 0.03);
+        leaf.scale.set(0.44, 0.72, 0.13);
         leaf.rotation.order = 'YXZ';
         leaf.rotation.y = a;
-        leaf.rotation.x = 0.15; // nearly upright
+        leaf.rotation.x = 0.15;
         group.add(leaf);
       }
-      // Tight pale heart at centre
-      const heart = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 5), lHeart);
-      heart.position.y = 0.24;
-      heart.scale.set(0.78, 0.95, 0.78);
-      group.add(heart);
       break;
     }
 
