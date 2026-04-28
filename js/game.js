@@ -1,9 +1,12 @@
 const UPGRADES = [
-  { id: 'auto_harvest',   name: 'Auto-Harvester', emoji: '🤖', desc: 'Harvests ready vegetables every 15s',    cost: 500 },
-  { id: 'speedy_growth',  name: 'Fast Growth',    emoji: '⚡', desc: '25% faster vegetable growth',            cost: 300 },
-  { id: 'expand_garden',  name: 'Expand Garden',  emoji: '🌿', desc: 'Grow garden from 3×3 to 4×4 (16 plots)', cost: 400 },
-  { id: 'double_harvest', name: 'Double Harvest', emoji: '💎', desc: 'Earn 2× points from every harvest',       cost: 800 },
+  { id: 'auto_harvest',   name: 'Auto-Harvester', emoji: '🤖', desc: 'Harvests ready vegetables every 15s', cost: 500 },
+  { id: 'speedy_growth',  name: 'Fast Growth',    emoji: '⚡', desc: '25% faster vegetable growth',         cost: 300 },
+  { id: 'double_harvest', name: 'Double Harvest', emoji: '💎', desc: 'Earn 2× points from every harvest',   cost: 800 },
 ];
+
+// Costs for each expansion step: 3→4, 4→5, 5→6, 6→7
+const EXPANSION_COSTS = [400, 800, 1500, 2500];
+const MAX_GRID_SIZE   = 7;
 
 class Plot {
   constructor(id, row, col) {
@@ -27,6 +30,7 @@ class GameState {
     this.totalHarvested = 0;
 
     UPGRADES.forEach(u => { this.upgrades[u.id] = false; });
+    // expansion tracked separately via gridSize
     this._initPlots();
   }
 
@@ -73,7 +77,16 @@ class GameState {
     if (!upg || this.upgrades[upgradeId] || !this.canAfford(upg.cost)) return false;
     this.points -= upg.cost;
     this.upgrades[upgradeId] = true;
-    if (upgradeId === 'expand_garden') this._expandGarden();
+    return true;
+  }
+
+  canExpandGarden() { return this.gridSize < MAX_GRID_SIZE; }
+  expansionCost()   { return EXPANSION_COSTS[this.gridSize - 3] ?? 9999; }
+
+  expandGarden() {
+    if (!this.canExpandGarden() || !this.canAfford(this.expansionCost())) return false;
+    this.points -= this.expansionCost();
+    this._expandGarden();
     return true;
   }
 

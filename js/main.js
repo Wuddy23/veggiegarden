@@ -608,7 +608,6 @@ function buildUpgradesUI() {
     if (!owned) {
       div.addEventListener('click', () => {
         if (gameState.buyUpgrade(upg.id)) {
-          if (upg.id === 'expand_garden') { rebuildGarden(); buildFence(gameState.gridSize); adjustCamera(); }
           buildUpgradesUI();
           updateUI();
           showToast(`${upg.emoji} ${upg.name} purchased!`);
@@ -619,6 +618,35 @@ function buildUpgradesUI() {
     }
     list.appendChild(div);
   });
+
+  // Dynamic expand-garden row — repeatable until MAX_GRID_SIZE
+  if (gameState.canExpandGarden()) {
+    const cost = gameState.expansionCost();
+    const next = gameState.gridSize + 1;
+    const affordable = gameState.canAfford(cost);
+    const div = document.createElement('div');
+    div.className = 'upgrade-item' + (affordable ? ' affordable' : '');
+    div.id = 'upg-expand';
+    div.innerHTML = `
+      <div class="upgrade-header">
+        <span>🌿 Expand Garden</span>
+        <span class="upgrade-cost">💰 ${cost}</span>
+      </div>
+      <div class="upgrade-desc">Grow garden from ${gameState.gridSize}×${gameState.gridSize} to ${next}×${next} (${next * next} plots)</div>`;
+    div.addEventListener('click', () => {
+      if (gameState.expandGarden()) {
+        rebuildGarden();
+        buildFence(gameState.gridSize);
+        adjustCamera();
+        buildUpgradesUI();
+        updateUI();
+        showToast(`🌿 Garden expanded to ${gameState.gridSize}×${gameState.gridSize}!`);
+      } else {
+        showToast('Not enough points!');
+      }
+    });
+    list.appendChild(div);
+  }
 }
 
 function adjustCamera() {
@@ -637,10 +665,11 @@ function updateUI() {
   UPGRADES.forEach(upg => {
     const el = document.getElementById(`upg-${upg.id}`);
     if (el && !gameState.upgrades[upg.id]) {
-      const affordable = gameState.canAfford(upg.cost);
-      el.classList.toggle('affordable', affordable);
+      el.classList.toggle('affordable', gameState.canAfford(upg.cost));
     }
   });
+  const expandEl = document.getElementById('upg-expand');
+  if (expandEl) expandEl.classList.toggle('affordable', gameState.canAfford(gameState.expansionCost()));
 }
 
 let toastTimer;
