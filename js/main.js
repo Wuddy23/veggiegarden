@@ -461,7 +461,7 @@ function addSignMesh(plot) {
   const sideMat  = new THREE.MeshLambertMaterial({ color: 0xEDE4C8 });
   const board = new THREE.Mesh(
     new THREE.BoxGeometry(0.30, 0.26, 0.04),
-    [sideMat, sideMat, sideMat, sideMat, frontMat, sideMat]
+    [sideMat, sideMat, sideMat, sideMat, frontMat, frontMat]
   );
   board.position.y = 0.50;
   board.castShadow = true;
