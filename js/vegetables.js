@@ -16,33 +16,83 @@ function createVegetableMesh(type) {
 
   switch (type) {
     case 'carrot': {
-      const body = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.65, 8), makeMat(veg.color));
-      body.position.y = 0.25;
-      body.rotation.z = Math.PI;
+      // Tapered body — wider at shoulder, narrow at root tip
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.025, 0.52, 8), makeMat(veg.color));
+      body.position.y = 0.30;
       body.castShadow = true;
       group.add(body);
-      for (let i = 0; i < 3; i++) {
-        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 5), makeMat(veg.stemColor));
-        const a = (i / 3) * Math.PI * 2;
-        leaf.position.set(Math.cos(a) * 0.09, 0.6, Math.sin(a) * 0.09);
-        leaf.scale.set(0.6, 1.6, 0.6);
-        leaf.castShadow = true;
-        group.add(leaf);
+      // Root tip cone
+      const tip = new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.1, 6), makeMat(veg.color));
+      tip.position.y = 0.0;
+      group.add(tip);
+      // Shoulder ring — slight bulge where greens meet root
+      const shoulder = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.13, 0.06, 8), makeMat(veg.color));
+      shoulder.position.y = 0.55;
+      group.add(shoulder);
+      // Feathery fronds (5) fanning upward
+      const frondMats = [makeMat(0x2E7D32), makeMat(0x558B2F), makeMat(0x4CAF50)];
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        const mat = frondMats[i % 3];
+        const lean = 0.28;
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.02, 0.38, 4), mat);
+        stem.position.set(Math.cos(a) * 0.1, 0.76, Math.sin(a) * 0.1);
+        stem.rotation.z = Math.cos(a) * lean;
+        stem.rotation.x = Math.sin(a) * lean;
+        stem.castShadow = true;
+        group.add(stem);
+        const leaflet = new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 4), mat);
+        leaflet.position.set(Math.cos(a) * 0.18, 0.96, Math.sin(a) * 0.18);
+        leaflet.scale.set(0.55, 1.5, 0.55);
+        group.add(leaflet);
       }
+      // Centre tuft
+      const tuft = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 5), frondMats[1]);
+      tuft.position.y = 0.62;
+      tuft.scale.set(1.1, 0.85, 1.1);
+      group.add(tuft);
       break;
     }
 
     case 'lettuce': {
-      for (let i = 0; i < 5; i++) {
-        const leaf = new THREE.Mesh(
-          new THREE.SphereGeometry(0.28 - i * 0.03, 8, 6),
-          makeMat(i % 2 === 0 ? veg.color : veg.stemColor)
-        );
-        leaf.position.y = i * 0.08;
-        leaf.scale.set(1, 0.38 - i * 0.04, 1);
+      const lOuter = makeMat(0x7CB342); // rich outer green
+      const lMid   = makeMat(0x9CCC65); // lighter mid
+      const lInner = makeMat(0xAED581); // pale inner
+      const lHeart = makeMat(0xC5E1A5); // soft yellow-green heart (subtle)
+      // Outer ring — 8 broad flat leaves splaying wide
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.24, 7, 5), lOuter);
+        leaf.position.set(Math.cos(a) * 0.19, 0.02, Math.sin(a) * 0.19);
+        leaf.scale.set(0.92, 0.14, 0.6);
+        leaf.rotation.y = a;
+        leaf.rotation.z = Math.cos(a) * 0.1;
         leaf.castShadow = true;
         group.add(leaf);
       }
+      // Mid ring — 6 leaves cupped slightly upward
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + 0.26;
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.17, 7, 5), lMid);
+        leaf.position.set(Math.cos(a) * 0.11, 0.09, Math.sin(a) * 0.11);
+        leaf.scale.set(0.82, 0.22, 0.58);
+        leaf.rotation.y = a;
+        group.add(leaf);
+      }
+      // Inner ring — 4 upright cupped leaves
+      for (let i = 0; i < 4; i++) {
+        const a = (i / 4) * Math.PI * 2 + 0.52;
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.11, 6, 5), lInner);
+        leaf.position.set(Math.cos(a) * 0.05, 0.17, Math.sin(a) * 0.05);
+        leaf.scale.set(0.68, 0.48, 0.52);
+        leaf.rotation.y = a;
+        group.add(leaf);
+      }
+      // Small tight heart at centre
+      const heart = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 5), lHeart);
+      heart.position.y = 0.24;
+      heart.scale.set(0.85, 0.75, 0.85);
+      group.add(heart);
       break;
     }
 
@@ -136,6 +186,40 @@ function createTomatoPlantMesh() {
     top.scale.set(0.9, 0.32, 0.7);
     g.add(top);
   }
+
+  return g;
+}
+
+function createCarrotTopMesh() {
+  const g = new THREE.Group();
+  const mat1 = makeMat(0x2E7D32);
+  const mat2 = makeMat(0x558B2F);
+  const mat3 = makeMat(0x4CAF50);
+  const mats = [mat1, mat2, mat3];
+
+  // 6 feathery fronds fanning outward from the soil
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const mat = mats[i % 3];
+    const lean = 0.3;
+    // Frond stem
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.02, 0.42, 4), mat);
+    stem.position.set(Math.cos(a) * 0.11, 0.22, Math.sin(a) * 0.11);
+    stem.rotation.z = Math.cos(a) * lean;
+    stem.rotation.x = Math.sin(a) * lean;
+    stem.castShadow = true;
+    g.add(stem);
+    // Leaflet tip
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.052, 5, 4), mat);
+    tip.position.set(Math.cos(a) * 0.17, 0.44, Math.sin(a) * 0.17);
+    tip.scale.set(0.55, 1.5, 0.55);
+    g.add(tip);
+  }
+  // Small centre tuft at soil level
+  const tuft = new THREE.Mesh(new THREE.SphereGeometry(0.065, 6, 5), mat2);
+  tuft.position.y = 0.07;
+  tuft.scale.set(1.05, 0.85, 1.05);
+  g.add(tuft);
 
   return g;
 }

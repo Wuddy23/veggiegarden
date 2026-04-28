@@ -360,9 +360,14 @@ function addVegetableMesh(plot) {
 
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
-      const plant = (plot.vegetable === 'tomato' && plot.state === 'growing')
-        ? createTomatoPlantMesh()
-        : createVegetableMesh(plot.vegetable);
+      let plant;
+      if (plot.vegetable === 'tomato' && plot.state === 'growing') {
+        plant = createTomatoPlantMesh();
+      } else if (plot.vegetable === 'carrot' && plot.state === 'growing') {
+        plant = createCarrotTopMesh();
+      } else {
+        plant = createVegetableMesh(plot.vegetable);
+      }
       // Each plant starts at its grid position and grows in-place
       const s = 0.40 * Math.max(0.02, plot.growthProgress);
       plant.scale.setScalar(s);
@@ -371,7 +376,9 @@ function addVegetableMesh(plot) {
     }
   }
 
-  group.userData.tomatoStage = (plot.vegetable === 'tomato') ? plot.state : null;
+  // Track growing-stage for vegetables that swap mesh on ready
+  const hasSwap = plot.vegetable === 'tomato' || plot.vegetable === 'carrot';
+  group.userData.swapStage = hasSwap ? plot.state : null;
   group.position.set(x, PLOT_H, z);
   // Group stays at scale 1 — individual plants scale up instead
   scene.add(group);
@@ -582,8 +589,8 @@ function animate(time) {
         mesh.children.forEach(plant => plant.scale.setScalar(s));
         setVegetableReady(mesh, false);
       } else if (plot.state === 'ready') {
-        // Swap tomato plant → tomato fruit the moment it becomes ready
-        if (plot.vegetable === 'tomato' && mesh.userData.tomatoStage === 'growing') {
+        // Swap growing plant → harvest model the moment it becomes ready
+        if (mesh.userData.swapStage === 'growing') {
           removeVegetableMesh(plot.id);
           addVegetableMesh(plot);
           return;
