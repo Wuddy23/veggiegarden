@@ -230,3 +230,121 @@ function setVegetableReady(group, isReady) {
     }
   });
 }
+
+// ── Herbs ─────────────────────────────────────────────────────────────────────
+
+const HERBS = {
+  basil:    { name: 'Basil',    emoji: '🌿', growTime: 20, cost: 5,  points: 18,  stemColor: 0x2E7D32, leafColor: 0x43A047 },
+  mint:     { name: 'Mint',     emoji: '🍃', growTime: 30, cost: 8,  points: 25,  stemColor: 0x00897B, leafColor: 0x26A69A },
+  thyme:    { name: 'Thyme',    emoji: '🌱', growTime: 40, cost: 12, points: 40,  stemColor: 0x558B2F, leafColor: 0x7CB342 },
+  rosemary: { name: 'Rosemary', emoji: '🪴', growTime: 65, cost: 20, points: 70,  stemColor: 0x4E7A40, leafColor: 0x7B9E6B },
+  lavender: { name: 'Lavender', emoji: '💜', growTime: 90, cost: 30, points: 100, stemColor: 0x6A9955, leafColor: 0x9575CD },
+};
+
+function createHerbPlantMesh(type) {
+  const h = HERBS[type];
+  const g = new THREE.Group();
+  const stemMat = new THREE.MeshLambertMaterial({ color: h.stemColor });
+  const leafMat = new THREE.MeshLambertMaterial({ color: h.leafColor });
+
+  switch (type) {
+    case 'basil': {
+      // Bushy rosette of broad leaves
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        const r = 0.09;
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.011, 0.10, 4), stemMat);
+        stem.position.set(Math.cos(a)*r, 0.05, Math.sin(a)*r*0.7);
+        stem.rotation.z = Math.cos(a) * 0.18;
+        g.add(stem);
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.065, 6, 4), leafMat);
+        leaf.position.set(Math.cos(a)*r*1.2, 0.13, Math.sin(a)*r*0.8);
+        leaf.scale.set(1.0, 0.42, 0.78);
+        g.add(leaf);
+      }
+      const topBud = new THREE.Mesh(new THREE.SphereGeometry(0.050, 5, 4), stemMat);
+      topBud.position.y = 0.18;
+      topBud.scale.set(1.0, 0.70, 1.0);
+      g.add(topBud);
+      break;
+    }
+    case 'mint': {
+      // Wide oval leaves on short stems
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2 + 0.2;
+        const r = i === 0 ? 0.02 : 0.10;
+        const ht = 0.10 + (i % 3) * 0.04;
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.013, ht, 4), stemMat);
+        stem.position.set(Math.cos(a)*r, ht/2, Math.sin(a)*r*0.7);
+        stem.rotation.z = Math.cos(a) * 0.20;
+        g.add(stem);
+        const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.072, 6, 4), leafMat);
+        leaf.position.set(Math.cos(a)*r*1.15, ht + 0.03, Math.sin(a)*r*0.75);
+        leaf.scale.set(1.0, 0.38, 0.80);
+        g.add(leaf);
+      }
+      break;
+    }
+    case 'thyme': {
+      // Dense low mound of fine stems
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        const r = i < 2 ? 0.03 : 0.12;
+        const ht = 0.08 + (i % 4) * 0.03;
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.010, ht, 4), stemMat);
+        stem.position.set(Math.cos(a)*r, ht/2, Math.sin(a)*r*0.7);
+        stem.rotation.z = Math.cos(a) * 0.12;
+        g.add(stem);
+        const tip = new THREE.Mesh(new THREE.SphereGeometry(0.022, 4, 3), leafMat);
+        tip.position.set(Math.cos(a)*r, ht + 0.02, Math.sin(a)*r*0.7);
+        g.add(tip);
+      }
+      break;
+    }
+    case 'rosemary': {
+      // Upright bush with needle-pair leaves
+      for (let i = 0; i < 7; i++) {
+        const a = (i / 7) * Math.PI * 2;
+        const r = i < 2 ? 0.03 : 0.11;
+        const ht = 0.16 + (i % 4) * 0.04;
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.011, ht, 4), stemMat);
+        stem.position.set(Math.cos(a)*r, ht/2, Math.sin(a)*r*0.65);
+        stem.rotation.z = Math.cos(a) * 0.10;
+        g.add(stem);
+        for (let j = 1; j <= 3; j++) {
+          const ny = (j / 4) * ht;
+          [-1, 1].forEach(side => {
+            const nd = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.007, 0.009), leafMat);
+            nd.position.set(
+              Math.cos(a)*r + Math.cos(a + side*Math.PI/2)*0.022,
+              ny,
+              Math.sin(a)*r*0.65
+            );
+            nd.rotation.y = a;
+            g.add(nd);
+          });
+        }
+      }
+      break;
+    }
+    case 'lavender': {
+      // Slender stalks with purple flower spikes
+      const stalkMat = new THREE.MeshLambertMaterial({ color: 0x7CAD5A });
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        const r = i < 2 ? 0.025 : 0.10;
+        const ht = 0.18 + (i % 3) * 0.05;
+        const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.010, ht, 4), stalkMat);
+        stalk.position.set(Math.cos(a)*r, ht/2, Math.sin(a)*r*0.7);
+        stalk.rotation.z = Math.cos(a) * 0.10;
+        g.add(stalk);
+        const spike = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.024, 0.09, 6), leafMat);
+        spike.position.set(Math.cos(a)*r, ht + 0.045, Math.sin(a)*r*0.7);
+        spike.rotation.z = Math.cos(a) * 0.10;
+        g.add(spike);
+      }
+      break;
+    }
+  }
+  return g;
+}
